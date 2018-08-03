@@ -49,7 +49,7 @@ def main():
     c = Config().define()
     vocab = load_vocab(c.vocab_path)
 
-    model = Model(c, training=True)
+    model = Model(c, training=False)
     with tf.Session() as sess:
         tf.global_variables_initializer().run()
         saver = tf.train.Saver(tf.global_variables())
