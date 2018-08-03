@@ -1,12 +1,11 @@
 import numpy as np
 import tensorflow as tf
 
-from configs import BakeConfig
 from dataset import load_vocab
-from model import Model
+from model import Model, ModelConfig
 
 
-class Config(BakeConfig):
+class Config(ModelConfig):
     vocab_path = '../data/vocab.json'
     weights_path = '../weights'
 
@@ -50,7 +49,7 @@ def main():
     c = Config().define()
     vocab = load_vocab(c.vocab_path)
 
-    model = Model(c)
+    model = Model(c, training=True)
     with tf.Session() as sess:
         tf.global_variables_initializer().run()
         saver = tf.train.Saver(tf.global_variables())

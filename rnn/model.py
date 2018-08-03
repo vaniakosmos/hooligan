@@ -1,7 +1,19 @@
+import easy_flags
 import tensorflow as tf
 from tensorflow.contrib import rnn
 
-from configs import ModelConfig
+
+class ModelConfig(easy_flags.BaseConfig):
+    layers = 2
+    cell_size = 128
+    forget_bias = 0.8
+    input_keep_prob = 0.9
+    output_keep_prob = 0.9
+    time_steps = 280  # tweet size
+    vocab_size = 64
+    grad_clip = 5
+    batch_size = 64
+    vocab_path = '../data/vocab.json'
 
 
 class Model(object):

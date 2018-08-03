@@ -3,9 +3,19 @@ import time
 
 import tensorflow as tf
 
-from configs import TrainConfig
 from dataset import Dataset, load_vocab
-from model import Model
+from model import Model, ModelConfig
+
+
+class TrainConfig(ModelConfig):
+    epochs = 20000
+    lr = 0.01
+    decay_rate = 0.97
+    log_dir = '../logs'
+    save_dir = '../weights'
+    ds_path = '../data/test.tfrecord'
+    log_step = 1
+    save_step = 100
 
 
 def get_model_name(c: TrainConfig):
