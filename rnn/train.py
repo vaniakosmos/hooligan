@@ -8,7 +8,7 @@ from rnn.model import Model, ModelConfig
 
 
 class TrainConfig(ModelConfig):
-    epochs = 20000
+    epochs = 100
     lr = 0.01
     decay_rate = 0.97
     log_dir = '../logs'
@@ -77,15 +77,14 @@ def train():
 
         # train
         for _ in range(c.epochs):
-            x, y, sl = ds.get_batch(sess)
+            x, y = ds.get_batch(sess)
             loss_, step, summary, _ = sess.run((loss, global_step, summary_op, train_op), {
                 model.inputs_ph: x,
                 model.targets_ph: y,
-                model.seq_length: sl,
             })
 
             if step % c.log_step == 0:
-                print(f"🔊 {step:-6d} loss={loss_:.5f}")
+                print(f"🔊 {step:-6d} - loss={loss_:.5f}")
                 summary_writer.add_summary(summary, step)
 
             if step > 0 and step % c.save_step == 0:

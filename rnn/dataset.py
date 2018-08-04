@@ -1,10 +1,9 @@
 import glob
 import json
-from collections import Counter
 
 import numpy as np
 import tensorflow as tf
-from tensorflow.core.example.feature_pb2 import BytesList, Feature, Features, Int64List
+from tensorflow.core.example.feature_pb2 import BytesList, Feature, Features
 
 from rnn.model import ModelConfig
 
@@ -21,10 +20,9 @@ def iterate_csv(data_file: str, column: str):
     pass
 
 
-def encode_record(data, length):
+def encode_record(data):
     features = {
         'tensor': Feature(bytes_list=BytesList(value=[data.tobytes()])),
-        'length': Feature(int64_list=Int64List(value=[length])),
     }
     features = Features(feature=features)
     example = tf.train.Example(features=features)
@@ -34,17 +32,15 @@ def encode_record(data, length):
 def decode_record(example_proto):
     features = {
         'tensor': tf.FixedLenFeature((), tf.string),
-        'length': tf.FixedLenFeature((), tf.int64),
     }
     parsed_features = tf.parse_single_example(example_proto, features)
     tensor = tf.decode_raw(parsed_features['tensor'], tf.int64)  # type: tf.Tensor
-    length = parsed_features['length']
-    return tensor, length
+    return tensor
 
 
-def save_vocab(counter: Counter, vocab_path: str):
-    count_pairs = sorted(counter.items(), key=lambda x: -x[1])
-    chars, _ = zip(*count_pairs)
+def save_vocab(chars, vocab_path: str):
+    chars = list(chars)
+    chars = ['pad', 'break'] + chars  # 0 - pad, 1 - break
     vocab = dict(zip(chars, range(len(chars))))
     with open(vocab_path, 'w') as f:
         json.dump(vocab, f)
@@ -56,29 +52,36 @@ def load_vocab(vocab_path: str):
         return json.load(f)
 
 
-def prebuild():
-    c = ModelConfig().define()
-    limit = c.time_steps
+class BuildConfig(ModelConfig):
+    limit = 280
     data_file = '../data/input.txt'
     vocab_file = '../data/vocab.json'
     tfrecord_file = '../data/test.tfrecord'
-    writer = tf.python_io.TFRecordWriter(tfrecord_file)
+    with_break = True
 
-    counter = Counter()
-    for line in iterate_txt(data_file):
-        counter.update(line)
-    vocab = save_vocab(counter, vocab_file)
 
-    for line in iterate_txt(data_file):
-        tensor = np.array(list(map(vocab.get, line)), dtype=np.int64)
-        tensor = tensor[:limit]
-        data = np.zeros([limit], dtype=int)
+def prebuild():
+    c = BuildConfig().define()
+    writer = tf.python_io.TFRecordWriter(c.tfrecord_file)
+
+    chars = set()
+    for line in iterate_txt(c.data_file):
+        chars = chars | set(line)
+    vocab = save_vocab(chars, c.vocab_file)
+
+    for line in iterate_txt(c.data_file):
+        ids = list(map(vocab.get, line))
+        if c.with_break:
+            ids += [1]
+        tensor = np.array(ids, dtype=np.int64)
+        tensor = tensor[:c.limit]
+        data = np.zeros([c.limit], dtype=np.int64)
         data[:len(tensor)] = tensor
-        ex = encode_record(data, len(tensor))
+        ex = encode_record(data)
         writer.write(ex)
 
 
-class Dataset:
+class Dataset(object):
     def __init__(self, record_files, batch_size):
         if isinstance(record_files, str):
             record_files = glob.glob(record_files)
@@ -90,21 +93,19 @@ class Dataset:
         self.get_next_op = iterator.get_next()
 
     def get_batch(self, sess: tf.Session):
-        x, sl = sess.run(self.get_next_op)
+        x = sess.run(self.get_next_op)
         y = np.copy(x)
         y[:, :-1] = x[:, 1:]
         y[:, -1] = x[:, 0]
-        return x, y, sl
+        return x, y
 
 
 def test_next_op():
     ds = Dataset('../data/test.tfrecord', 10)
     with tf.Session() as sess:
-        x, _, y = ds.get_batch(sess)
-        print(x)
+        x, y = ds.get_batch(sess)
+        print(x[:, :10])
         print(x.shape)
-        print(y)
-        print(y.shape)
 
 
 if __name__ == '__main__':

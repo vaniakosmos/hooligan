@@ -6,9 +6,9 @@ from tensorflow.contrib import rnn
 class ModelConfig(easy_flags.BaseConfig):
     layers = 2
     cell_size = 128
-    forget_bias = 0.8
-    input_keep_prob = 0.9
-    output_keep_prob = 0.9
+    forget_bias = 1.0
+    input_keep_prob = 1.0
+    output_keep_prob = 1.0
     time_steps = 280  # tweet size
     vocab_size = 64
     grad_clip = 5
@@ -27,8 +27,7 @@ class Model(object):
                                         name='inputs_ph')
         self.targets_ph = tf.placeholder(tf.int64, [c.batch_size, c.time_steps],
                                          name='targets_ph')
-        self.seq_length = tf.placeholder(tf.int64, [c.batch_size],
-                                         name='seq_length')
+        self.seq_length = tf.count_nonzero(self.inputs_ph, axis=1)
 
         self.cell = self.get_cell(c.layers, c)
         self.initial_state = self.cell.zero_state(c.batch_size, tf.float64)
