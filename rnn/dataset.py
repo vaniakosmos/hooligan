@@ -6,7 +6,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.core.example.feature_pb2 import BytesList, Feature, Features, Int64List
 
-from model import ModelConfig
+from rnn.model import ModelConfig
 
 
 def iterate_txt(data_file: str):

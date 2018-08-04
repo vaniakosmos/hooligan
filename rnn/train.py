@@ -3,8 +3,8 @@ import time
 
 import tensorflow as tf
 
-from dataset import Dataset, load_vocab
-from model import Model, ModelConfig
+from rnn.dataset import Dataset, load_vocab
+from rnn.model import Model, ModelConfig
 
 
 class TrainConfig(ModelConfig):
