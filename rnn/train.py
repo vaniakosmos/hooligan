@@ -13,8 +13,8 @@ class TrainConfig(ModelConfig):
     decay_rate = 0.97
     log_dir = '../logs'
     save_dir = '../weights'
-    ds_path = '../data/test.tfrecord'
-    log_step = 1
+    ds_path = '../data/tweets.tfrecord'
+    log_step = 10
     save_step = 100
 
 

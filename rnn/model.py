@@ -9,7 +9,7 @@ class ModelConfig(easy_flags.BaseConfig):
     forget_bias = 1.0
     input_keep_prob = 1.0
     output_keep_prob = 1.0
-    time_steps = 280  # tweet size
+    time_steps = 281  # tweet size + break char
     vocab_size = 64
     grad_clip = 5
     batch_size = 64
